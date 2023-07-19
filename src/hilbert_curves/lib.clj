@@ -34,24 +34,27 @@
                (bit-shift-right significant 2))
         point))))
 
-(defn normalize-point [quadrants width point]
+(defn normalize-point
+  "Multiply the point by the dimensions of the rectangle and add half the width or height as offset."
+  [quadrants height width point]
   (let [x (first point)
         y (second point)
-        len (/ width quadrants)]
-    [(+ (* x len) (/ len 2))
-     (+ (* y len) (/ len 2))]))
+        w-len (/ width quadrants)
+        h-len (/ height quadrants)]
+    [(+ (* x w-len) (/ w-len 2))
+     (+ (* y h-len) (/ h-len 2))]))
 
-(defn make-points [quadrants width order total]
-  (map (partial normalize-point quadrants width)
+(defn make-points [quadrants height width order total]
+  (map (partial normalize-point quadrants height width)
        (map (partial hilbert order) (range total))))
 
 (defn calculate-params
-  ([order width] (calculate-params order width 0))
-  ([order width counter]
+  ([order height width] (calculate-params order height width 0))
+  ([order height width counter]
    (let [q (quadrants-from-order order)
          total (total-from-quadrants q)]
      {:order order
       :quadrants q
       :total total
       :counter (if (>= counter total) 0 (+ 50 counter))
-      :points (make-points q width order total)})))
+      :points (make-points q height width order total)})))

@@ -10,10 +10,10 @@
   (q/frame-rate 5)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  (lib/calculate-params order (q/width)))
+  (lib/calculate-params order (q/height) (q/width)))
 
 (defn update-state [state]
-  (lib/calculate-params (:order state) (q/width) (:counter state)))
+  (lib/calculate-params (:order state) (q/height) (q/width) (:counter state)))
 
 (defn line-from-points [point1 point2]
   (let [x1 (first point1)
@@ -35,7 +35,7 @@
 
 (q/defsketch hilbert-curves
   :title "Hilbert Curves"
-  :size [512 512]
+  :size [512 1024]
   ; setup function called only once, during sketch initialization.
   :setup setup
   ; update-state is called on each iteration before draw-state.
