@@ -9,10 +9,10 @@
   (q/frame-rate 5)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  (lib/calculate-params 3 0))
+  (lib/calculate-params 3 (q/width)))
 
 (defn update-state [state]
-  (lib/calculate-params (:order state) (:counter state)))
+  (lib/calculate-params (:order state) (q/width) (:counter state)))
 
 (defn line-from-points [point1 point2]
   (let [x1 (first point1)
@@ -36,15 +36,9 @@
   (q/background 0)
   (q/no-fill)
   ; Draw hilbert curve for every point in the rectangle
-  (let [quadrants (:quadrants state)
-        counter (:counter state)
-        order (:order state)
-        normalize (partial lib/normalize-point quadrants q/width)]
-    (dotimes [i (dec counter)]
-      (line-from-points (normalize (lib/hilbert order (inc i)))
-                        (normalize (lib/hilbert order i)))
-      ;; (show-point (normalize (lib/hilbert order i))))))
-      )))
+  (let [points (take (:counter state) (:points state))]
+    (doseq [[point1 point2] (partition 2 1 points)]
+      (line-from-points point1 point2))))
 
 (q/defsketch hilbert-curves
   :title "Hilbert Curves"
