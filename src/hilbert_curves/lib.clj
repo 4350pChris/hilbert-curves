@@ -1,12 +1,13 @@
 (ns hilbert-curves.lib)
 
-(defn calculate-params [order]
+(defn calculate-params [order counter]
   ; Calculate number of points and total number of points.
-  (let [quadrant (Math/pow 2 order)
-        total (* quadrant quadrant)]
+  (let [q (Math/pow 2 order)
+        total (* q q)]
     {:order order
-     :quadrant quadrant
-     :total total}))
+     :quadrants q
+     :total total
+     :counter (if (>= counter total) 0 (+ 50 counter))}))
 
 (defn hilbert-start-point [i]
   (let [masked (bit-and i 3)]
@@ -37,6 +38,7 @@
                (hilbert-rotate significant point n)
                (bit-shift-right significant 2))
         point))))
+
 (defn normalize-point [quadrant width point]
   (let [x (first point)
         y (second point)
