@@ -1,61 +1,18 @@
 (ns hilbert-curves.core
   (:require [quil.core :as q]
-            [quil.middleware :as m]))
+            [quil.middleware :as m]
+            [hilbert-curves.lib :as lib]))
 
-(defn calculate-params [order]
-  ; Calculate number of points and total number of points.
-  (let [N (Math/pow 2 order)
-        total (* N N)]
-    {:order order
-     :N N
-     :total total}))
-
-(defn hilbert-start-point [i]
-  (let [masked (bit-and i 3)]
-    (condp = masked
-      0 [0 0]
-      1 [0 1]
-      2 [1 1]
-      3 [1 0])))
-
-(defn hilbert-rotate [significant point order]
-  (let [rx (first point)
-        ry (second point)
-        quadrant (bit-and significant 3)
-        len (Math/pow 2 order)]
-    (condp = quadrant
-      0 [ry rx]
-      1 [rx (+ ry len)]
-      2 [(+ rx len) (+ ry len)]
-      3 [(- (* 2 len) 1 ry) (- len 1 rx)])))
-
-(defn hilbert [order i]
-  (let [point (hilbert-start-point i)]
-    (loop [n 1
-           point point
-           significant (bit-shift-right i 2)]
-      (if (< n order)
-        (recur (inc n)
-               (hilbert-rotate significant point n)
-               (bit-shift-right significant 2))
-        point))))
-
-(defn normalize-point [N point]
-  (let [x (first point)
-        y (second point)
-        len (/ (q/width) N)]
-    [(+ (* x len) (/ len 2))
-     (+ (* y len) (/ len 2))]))
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
   (q/frame-rate 1)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  (calculate-params 3))
+  (lib/calculate-params 3))
 
 (defn update-state [state]
-  (calculate-params (:order state)))
+  (lib/calculate-params (:order state)))
 
 (defn line-from-points [point1 point2]
   (let [x1 (first point1)
@@ -83,11 +40,11 @@
   (let [N (:N state)
         total (:total state)
         order (:order state)
-        normalize (partial normalize-point N)]
+        normalize (partial lib/normalize-point N q/width)]
     (dotimes [i (dec total)]
-      (line-from-points (normalize (hilbert order (inc i)))
-                        (normalize (hilbert order i)))
-      (show-point (normalize (hilbert order i))))))
+      (line-from-points (normalize (lib/hilbert order (inc i)))
+                        (normalize (lib/hilbert order i)))
+      (show-point (normalize (lib/hilbert order i))))))
 
 (q/defsketch hilbert-curves
   :title "Hilbert Curves"
