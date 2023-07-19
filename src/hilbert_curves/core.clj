@@ -6,7 +6,7 @@
 (def order 3)
 
 (defn setup []
-  ; Set frame rate to 30 frames per second.
+  ; Set frame rate to 5 frames per second.
   (q/frame-rate 5)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
@@ -26,7 +26,7 @@
 
 (defn draw-state [state]
   ; Clear the sketch by filling it with light-grey color.
-  (q/background 0)
+  (q/background 40)
   (q/no-fill)
   ; Draw hilbert curve for every point in the rectangle
   (let [points (take (:counter state) (:points state))]
@@ -35,13 +35,13 @@
 
 (q/defsketch hilbert-curves
   :title "Hilbert Curves"
-  :size [512 1024]
+  :size [512 512]
   ; setup function called only once, during sketch initialization.
   :setup setup
   ; update-state is called on each iteration before draw-state.
   :update update-state
   :draw draw-state
-  :features [:keep-on-top]
+  :features [:keep-on-top :resizable]
   ; This sketch uses functional-mode middleware.
   ; Check quil wiki for more info about middlewares and particularly
   ; fun-mode.
