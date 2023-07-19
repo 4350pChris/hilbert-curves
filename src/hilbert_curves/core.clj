@@ -37,10 +37,10 @@
   (q/stroke 255)
   (q/stroke-weight 1)
   ; Draw hilbert curve for every point in the rectangle
-  (let [N (:N state)
+  (let [quadrant (:quadrant state)
         total (:total state)
         order (:order state)
-        normalize (partial lib/normalize-point N q/width)]
+        normalize (partial lib/normalize-point quadrant q/width)]
     (dotimes [i (dec total)]
       (line-from-points (normalize (lib/hilbert order (inc i)))
                         (normalize (lib/hilbert order i)))

@@ -2,10 +2,10 @@
 
 (defn calculate-params [order]
   ; Calculate number of points and total number of points.
-  (let [N (Math/pow 2 order)
-        total (* N N)]
+  (let [quadrant (Math/pow 2 order)
+        total (* quadrant quadrant)]
     {:order order
-     :N N
+     :quadrant quadrant
      :total total}))
 
 (defn hilbert-start-point [i]
@@ -37,9 +37,9 @@
                (hilbert-rotate significant point n)
                (bit-shift-right significant 2))
         point))))
-(defn normalize-point [N width point]
+(defn normalize-point [quadrant width point]
   (let [x (first point)
         y (second point)
-        len (/ (width) N)]
+        len (/ (width) quadrant)]
     [(+ (* x len) (/ len 2))
      (+ (* y len) (/ len 2))]))
