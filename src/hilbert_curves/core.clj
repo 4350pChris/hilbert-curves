@@ -3,13 +3,14 @@
             [quil.middleware :as m]
             [hilbert-curves.lib :as lib]))
 
+(def order 3)
 
 (defn setup []
   ; Set frame rate to 30 frames per second.
   (q/frame-rate 5)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  (lib/calculate-params 3 (q/width)))
+  (lib/calculate-params order (q/width)))
 
 (defn update-state [state]
   (lib/calculate-params (:order state) (q/width) (:counter state)))
@@ -22,14 +23,6 @@
     (q/stroke-weight 1)
     (q/stroke 255)
     (q/line x1 y1 x2 y2)))
-
-(defn show-point [point]
-  (let [x (first point)
-        y (second point)]
-    (q/stroke 255)
-    (q/stroke-weight 5)
-    (q/ellipse x y 5 5)
-    (q/text (str x "i bims junge ," y) (+ x 5) y)))
 
 (defn draw-state [state]
   ; Clear the sketch by filling it with light-grey color.
