@@ -12,14 +12,14 @@
       2 [1 1]
       3 [1 0])))
 
-(defn hilbert-rotate [significant [rx ry] order]
+(defn hilbert-rotate [significant [x y] order]
   (let [quadrant (bit-and significant 3)
         len (Math/pow 2 order)]
     (condp = quadrant
-      0 [ry rx]
-      1 [rx (+ ry len)]
-      2 [(+ rx len) (+ ry len)]
-      3 [(- (* 2 len) 1 ry) (- len 1 rx)])))
+      0 [y x]
+      1 [x (+ y len)]
+      2 [(+ x len) (+ y len)]
+      3 [(- (* 2 len) 1 y) (- len 1 x)])))
 
 (defn hilbert
   ([order n point significant]
