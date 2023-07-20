@@ -3,17 +3,21 @@
             [quil.middleware :as m]
             [hilbert-curves.lib :as lib]))
 
-(def order 3)
+(def order 6)
+(def controls-height 100)
+
+(defn draw-height []
+  (- (q/height) controls-height))
 
 (defn setup []
   ; Set frame rate to 5 frames per second.
   (q/frame-rate 5)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  (lib/calculate-params order (q/height) (q/width)))
+  (lib/calculate-params order (draw-height) (q/width)))
 
 (defn update-state [state]
-  (lib/calculate-params (:order state) (q/height) (q/width) (:counter state)))
+  (lib/calculate-params (:order state) (draw-height) (q/width) (:counter state)))
 
 (defn line-from-points [point1 point2]
   (let [x1 (first point1)
@@ -28,6 +32,8 @@
   ; Clear the sketch by filling it with light-grey color.
   (q/background 40)
   (q/no-fill)
+  ; Make room for controls at top of the sketch.
+  (q/translate 0 controls-height)
   ; Draw hilbert curve for every point in the rectangle
   (let [points (take (:counter state) (:points state))]
     (doseq [[point1 point2] (partition 2 1 points)]
@@ -35,7 +41,7 @@
 
 (q/defsketch hilbert-curves
   :title "Hilbert Curves"
-  :size [512 512]
+  :size [512 (+ 512 controls-height)]
   ; setup function called only once, during sketch initialization.
   :setup setup
   ; update-state is called on each iteration before draw-state.
