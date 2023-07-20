@@ -69,7 +69,7 @@
     (do
       (swap! text-buffer #(if (is-backspace? raw-key)
                             ; remove last char from text buffer
-                            (subs % 0 (dec (count %)))
+                            (subs % 0 (Math/max (dec (count %)) 0))
                             (str % raw-key))) ; add input to text buffer
       state)))
 
