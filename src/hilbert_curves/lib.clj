@@ -23,16 +23,15 @@
       2 [(+ rx len) (+ ry len)]
       3 [(- (* 2 len) 1 ry) (- len 1 rx)])))
 
-(defn hilbert [order i]
-  (let [point (hilbert-start-point i)]
-    (loop [n 1
-           point point
-           significant (bit-shift-right i 2)]
-      (if (< n order)
-        (recur (inc n)
-               (hilbert-rotate significant point n)
-               (bit-shift-right significant 2))
-        point))))
+(defn hilbert
+  ([order n point significant]
+   (if (< n order)
+     (recur order
+            (inc n)
+            (hilbert-rotate significant point n)
+            (bit-shift-right significant 2))
+     point))
+  ([order i] (hilbert order 1 (hilbert-start-point i) (bit-shift-right i 2))))
 
 (defn normalize-point
   "Multiply the point by the dimensions of the rectangle and add half the width or height as offset."
