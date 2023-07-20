@@ -20,18 +20,11 @@
 (defn update-state [state]
   (lib/calculate-params (:order state) (draw-height) (q/width) (:counter state) (:counter-increments state)))
 
-(defn line-from-points [point1 point2]
-  (let [x1 (first point1)
-        y1 (second point1)
-        x2 (first point2)
-        y2 (second point2)]
-    (q/stroke-weight 1)
-    (q/stroke 255)
-    (q/line x1 y1 x2 y2)))
-
 (defn draw-state [state]
   (q/background 20)
   (q/fill 240)
+  (q/stroke-weight 1)
+  (q/stroke 255)
   (show-controls state)
   ; Clear the sketch by filling it with light-grey color.
   ; Make room for controls at top of the sketch.
@@ -40,7 +33,7 @@
   ; Draw hilbert curve for every point in the rectangle
   (let [points (take (:counter state) (:points state))]
     (doseq [[point1 point2] (partition 2 1 points)]
-      (line-from-points point1 point2))))
+      (q/line point1 point2))))
 
 (q/defsketch hilbert-curves
   :title "Hilbert Curves"
