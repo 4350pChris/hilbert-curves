@@ -45,7 +45,7 @@
     :action #(Integer/parseInt %)
     :mode :order
     :key :o}
-   {:label (str "Lines Per Frame (c): " (:counter-increments state))
+   {:label (str "Increment (c) - 0 disables: " (:counter-increments state))
     :action #(Integer/parseInt %)
     :mode :counter-increments
     :key :c}
@@ -88,6 +88,9 @@
 (defn key-press
   [state
    {key :key :as event}]
+   ; make sure the UI is updated to show input
+  (when (not (q/looping?))
+    (q/redraw))
     ; if we're not in input mode see if the key maps to a control
   (if (= @input-mode :none)
     (if-let [control (first (filter #(= (:key %) key) (controls state)))]
