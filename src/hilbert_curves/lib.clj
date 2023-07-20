@@ -49,12 +49,13 @@
        (map (partial hilbert order) (range total))))
 
 (defn calculate-params
-  ([order height width] (calculate-params order height width 0))
-  ([order height width counter]
+  ([order height width] (calculate-params order height width 0 50))
+  ([order height width counter counter-increments]
    (let [q (quadrants-from-order order)
          total (total-from-quadrants q)]
      {:order order
       :quadrants q
       :total total
-      :counter (if (>= counter total) 0 (+ 50 counter))
+      :counter-increments counter-increments
+      :counter (if (>= counter total) 0 (+ counter-increments counter))
       :points (make-points q height width order total)})))

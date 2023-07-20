@@ -1,9 +1,10 @@
 (ns hilbert-curves.core
   (:require [quil.core :as q]
             [quil.middleware :as m]
-            [hilbert-curves.lib :as lib]))
+            [hilbert-curves.lib :as lib]
+            [hilbert-curves.controls :refer [key-press show-controls]]))
 
-(def order 6)
+(def order (atom 1))
 (def controls-height 100)
 
 (defn draw-height []
@@ -14,10 +15,11 @@
   (q/frame-rate 5)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  (lib/calculate-params order (draw-height) (q/width)))
+  (lib/calculate-params @order (draw-height) (q/width)))
 
 (defn update-state [state]
-  (lib/calculate-params (:order state) (draw-height) (q/width) (:counter state)))
+  (println (:counter-increments state))
+  (lib/calculate-params (:order state) (draw-height) (q/width) (:counter state) (:counter-increments state)))
 
 (defn line-from-points [point1 point2]
   (let [x1 (first point1)
@@ -29,11 +31,13 @@
     (q/line x1 y1 x2 y2)))
 
 (defn draw-state [state]
+  (q/background 20)
+  (q/fill 240)
+  (show-controls)
   ; Clear the sketch by filling it with light-grey color.
-  (q/background 40)
-  (q/no-fill)
   ; Make room for controls at top of the sketch.
   (q/translate 0 controls-height)
+  ;; (q/no-fill)
   ; Draw hilbert curve for every point in the rectangle
   (let [points (take (:counter state) (:points state))]
     (doseq [[point1 point2] (partition 2 1 points)]
@@ -51,6 +55,7 @@
   ; This sketch uses functional-mode middleware.
   ; Check quil wiki for more info about middlewares and particularly
   ; fun-mode.
-  :middleware [m/fun-mode])
+  :middleware [m/fun-mode]
+  :key-typed key-press)
 
 (defn -main [& args])
