@@ -1,7 +1,11 @@
 (ns hilbert-curves.controls
   (:require [quil.core :as q]))
 
+; keeps track of current input mode, has to respond to a key in state
 (def input-mode (atom :none))
+
+; holds handler that is invoked when text buffer is flushed
+(def current-handler (atom nil))
 
 ; holds input value when in input mode, will be flushed an written to state when :enter is pressed
 (def text-buffer (atom ""))
@@ -9,19 +13,19 @@
 (defn flush-buffer
   "Flushes the text buffer, returning new state."
   [state]
-  (let [mode @input-mode]
+  (let [mode @input-mode
+        handler @current-handler
+        text @text-buffer]
     (reset! input-mode :none)
-    (condp = mode
-      :counter (do
-                 (println "counter set to" @text-buffer)
-                 (let [text @text-buffer]
-                   (reset! text-buffer "")
-                   (try
-                     (assoc state :counter-increments (Integer/parseInt text))
-                     (catch Exception e
-                       (println "Could not parse int from " text " - " (.getMessage e))
-                       state))))
-      state)))
+    (reset! current-handler nil)
+    (reset! text-buffer "")
+    (try
+      (if (nil? handler)
+        state
+        (assoc state mode (handler text)))
+      (catch Exception e
+        (println (.getMessage e))
+        state))))
 
 (defn make-action
   "Helper to make actions that take no params and do not return state not break the app."
@@ -33,10 +37,15 @@
 
 (def controls (atom [{:label "Space: Pause / Resume"
                       :action (make-action #(if (q/looping?) (q/no-loop) (q/start-loop)))
+                      :mode nil
                       :key :space}
-                     {:label "C: Set counter"
-                      ; set input-mode to :counter
-                      :action (make-action #(reset! input-mode :counter))
+                     {:label "O: Set order"
+                      :action #(Integer/parseInt %)
+                      :mode :order
+                      :key :o}
+                     {:label "C: Set counter increment"
+                      :action #(Integer/parseInt %)
+                      :mode :counter-increments
                       :key :c}]))
 
 (defn is-enter?
@@ -62,6 +71,12 @@
     ; if we're not in input mode see if the key maps to a control
     (if (= @input-mode :none)
       (if-let [control (first (filter #(= (:key %) key) @controls))]
-        ((:action control) state) ; invoke action
+        (if (nil? (:mode control))
+          ; if the control has no mode, just invoke the action and return state
+          ((:action control) state)
+          ; if the control has a mode, enter input mode and return state
+          (do (reset! input-mode (:mode control))
+              (reset! current-handler (:action control))
+              state))
         state) ; just return state when no mapped key was pressed
       (handle-input-mode-press state event))))
