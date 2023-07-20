@@ -35,18 +35,20 @@
     state)) ; return state as it was
 
 
-(def controls (atom [{:label "Space: Pause / Resume"
-                      :action (make-action #(if (q/looping?) (q/no-loop) (q/start-loop)))
-                      :mode nil
-                      :key :space}
-                     {:label "O: Set order"
-                      :action #(Integer/parseInt %)
-                      :mode :order
-                      :key :o}
-                     {:label "C: Set counter increment"
-                      :action #(Integer/parseInt %)
-                      :mode :counter-increments
-                      :key :c}]))
+(defn controls
+  [state]
+  [{:label "Loop (space): Pause / Resume"
+    :action (make-action #(if (q/looping?) (q/no-loop) (q/start-loop)))
+    :mode nil
+    :key :space}
+   {:label (str "Order (o): " (:order state))
+    :action #(Integer/parseInt %)
+    :mode :order
+    :key :o}
+   {:label (str "Lines Per Frame (c): " (:counter-increments state))
+    :action #(Integer/parseInt %)
+    :mode :counter-increments
+    :key :c}])
 
 (defn is-enter?
   "I just couldn't get the key code for enter to work, so I'm using this workaround."
@@ -59,18 +61,23 @@
     (do (swap! text-buffer #(str % (:raw-key event))) ; add input to text buffer
         state)))
 
-(defn show-controls []
+(defn framerate-mod-2?
+  "Helper to make the cursor blink around every second."
+  []
+  (= 0 (mod (int (/ (q/frame-count) (q/current-frame-rate))) 2)))
+
+(defn show-controls [state]
   (q/text-size 14)
   (when (not (= @input-mode :none))
-    (q/text (str "Input (Enter to confirm): " @text-buffer) 10 20))
-  (doseq [[idx item] (map-indexed (fn [idx item] [idx item]) @controls)]
+    (q/text (str "Input (Enter to confirm): " @text-buffer (if (framerate-mod-2?) "|" "")) 10 20))
+  (doseq [[idx item] (map-indexed (fn [idx item] [idx item]) (controls state))]
     (q/text (:label item) (+ 10 (* 100 (int (/ idx 4)))) (+ 25 (* 20 (mod (inc idx) 4))))))
 
 (defn key-press [state event]
   (let [key (:key event)]
     ; if we're not in input mode see if the key maps to a control
     (if (= @input-mode :none)
-      (if-let [control (first (filter #(= (:key %) key) @controls))]
+      (if-let [control (first (filter #(= (:key %) key) (controls state)))]
         (if (nil? (:mode control))
           ; if the control has no mode, just invoke the action and return state
           ((:action control) state)

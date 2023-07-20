@@ -18,7 +18,6 @@
   (lib/calculate-params @order (draw-height) (q/width)))
 
 (defn update-state [state]
-  (println (:counter-increments state))
   (lib/calculate-params (:order state) (draw-height) (q/width) (:counter state) (:counter-increments state)))
 
 (defn line-from-points [point1 point2]
@@ -33,7 +32,7 @@
 (defn draw-state [state]
   (q/background 20)
   (q/fill 240)
-  (show-controls)
+  (show-controls state)
   ; Clear the sketch by filling it with light-grey color.
   ; Make room for controls at top of the sketch.
   (q/translate 0 controls-height)
