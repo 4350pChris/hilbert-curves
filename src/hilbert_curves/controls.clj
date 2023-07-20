@@ -83,7 +83,7 @@
   (when (not (= @input-mode :none))
     (q/text (str "Input (Enter to confirm): " @text-buffer (if (framerate-mod-2?) "|" "")) 10 20))
   (doseq [[idx item] (map-indexed (fn [idx item] [idx item]) (controls state))]
-    (q/text (:label item) (+ 10 (* 100 (int (/ idx 4)))) (+ 25 (* 20 (mod (inc idx) 4))))))
+    (q/text (:label item) (+ 10 (* 300 (int (/ idx 3)))) (+ 40 (* 20 (mod idx 3))))))
 
 (defn key-press
   [state
