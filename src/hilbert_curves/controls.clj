@@ -48,7 +48,11 @@
    {:label (str "Lines Per Frame (c): " (:counter-increments state))
     :action #(Integer/parseInt %)
     :mode :counter-increments
-    :key :c}])
+    :key :c}
+   {:label "Load Image (i)"
+    :mode :image
+    :action #(q/load-image %)
+    :key :i}])
 
 (defn is-key?
   [unicode raw-key]

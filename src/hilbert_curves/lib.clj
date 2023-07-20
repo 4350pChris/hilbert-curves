@@ -1,4 +1,5 @@
-(ns hilbert-curves.lib)
+(ns hilbert-curves.lib
+  (:require [quil.core :as q]))
 
 (defn quadrants-from-order [order] (Math/pow 2 order))
 
@@ -39,6 +40,14 @@
     [(+ (* x w-len) (/ w-len 2))
      (+ (* y h-len) (/ h-len 2))]))
 
+(defn hilbert-dither-points
+  [image [x1 y1] [x2 y2] brightness]
+  (let [pixel-from-image #(q/get-pixel image (int %1) (int %2))
+        px1 (pixel-from-image x1 y1)
+        px2 (pixel-from-image x2 y2)
+        b-diff (- (q/brightness px2) (q/brightness px1))]
+    (q/constrain (+ b-diff brightness) 0 255)))
+
 (defn make-points [quadrants height width order total]
   (map (partial normalize-point quadrants height width)
        (map (partial hilbert order) (range total))))
@@ -47,10 +56,11 @@
   ([order height width] (calculate-params order height width 0 50))
   ([order height width counter counter-increments]
    (let [q (quadrants-from-order order)
-         total (total-from-quadrants q)]
+         total (total-from-quadrants q)
+         points (make-points q height width order total)]
      {:order order
       :quadrants q
       :total total
       :counter-increments counter-increments
       :counter (if (>= counter total) 0 (+ counter-increments counter))
-      :points (make-points q height width order total)})))
+      :points points})))
