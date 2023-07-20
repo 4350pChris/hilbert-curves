@@ -57,17 +57,18 @@
   ([order height width counter counter-increments]
    (let [q (quadrants-from-order order)
          total (total-from-quadrants q)
-         points (make-points q height width order total)]
+         points (make-points q height width order total)
+         do-not-loop? (= counter-increments 0)]
      ; disable loop if counter-increments is 0, reactivate if it's stopped and counter-increments is > 0
      (cond
-       (= counter-increments 0) (q/no-loop)
+       do-not-loop? (q/no-loop)
        (not (q/looping?)) (q/start-loop))
      {:order order
       :quadrants q
       :total total
       :counter-increments counter-increments
       :counter (cond
-                 (= counter-increments 0) total
+                 do-not-loop? total
                  (>= counter total) 0
                  :else (+ counter-increments counter))
       :points points})))
