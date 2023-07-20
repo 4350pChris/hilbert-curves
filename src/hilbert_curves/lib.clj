@@ -12,10 +12,8 @@
       2 [1 1]
       3 [1 0])))
 
-(defn hilbert-rotate [significant point order]
-  (let [rx (first point)
-        ry (second point)
-        quadrant (bit-and significant 3)
+(defn hilbert-rotate [significant [rx ry] order]
+  (let [quadrant (bit-and significant 3)
         len (Math/pow 2 order)]
     (condp = quadrant
       0 [ry rx]
@@ -35,10 +33,8 @@
 
 (defn normalize-point
   "Multiply the point by the dimensions of the rectangle and add half the width or height as offset."
-  [quadrants height width point]
-  (let [x (first point)
-        y (second point)
-        w-len (/ width quadrants)
+  [quadrants height width [x y]]
+  (let [w-len (/ width quadrants)
         h-len (/ height quadrants)]
     [(+ (* x w-len) (/ w-len 2))
      (+ (* y h-len) (/ h-len 2))]))

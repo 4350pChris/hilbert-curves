@@ -81,17 +81,18 @@
   (doseq [[idx item] (map-indexed (fn [idx item] [idx item]) (controls state))]
     (q/text (:label item) (+ 10 (* 100 (int (/ idx 4)))) (+ 25 (* 20 (mod (inc idx) 4))))))
 
-(defn key-press [state event]
-  (let [key (:key event)]
+(defn key-press
+  [state
+   {key :key :as event}]
     ; if we're not in input mode see if the key maps to a control
-    (if (= @input-mode :none)
-      (if-let [control (first (filter #(= (:key %) key) (controls state)))]
-        (if (nil? (:mode control))
+  (if (= @input-mode :none)
+    (if-let [control (first (filter #(= (:key %) key) (controls state)))]
+      (if (nil? (:mode control))
           ; if the control has no mode, just invoke the action and return state
-          ((:action control) state)
+        ((:action control) state)
           ; if the control has a mode, enter input mode and return state
-          (do (reset! input-mode (:mode control))
-              (reset! current-handler (:action control))
-              state))
-        state) ; just return state when no mapped key was pressed
-      (handle-input-mode-press state event))))
+        (do (reset! input-mode (:mode control))
+            (reset! current-handler (:action control))
+            state))
+      state) ; just return state when no mapped key was pressed
+    (handle-input-mode-press state event)))
