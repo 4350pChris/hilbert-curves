@@ -4,18 +4,17 @@
             [hilbert-curves.lib :as lib]
             [hilbert-curves.controls :refer [key-press show-controls]]))
 
-(def order (atom 1))
+(def initial-order 1)
 (def controls-height 100)
 
 (defn draw-height []
   (- (q/height) controls-height))
 
 (defn setup []
-  ; Set frame rate to 5 frames per second.
-  (q/frame-rate 5)
+  (q/frame-rate 30)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  (lib/calculate-params @order (draw-height) (q/width)))
+  (lib/calculate-params initial-order (draw-height) (q/width)))
 
 (defn update-state [state]
   (lib/calculate-params (:order state) (draw-height) (q/width) (:counter state) (:counter-increments state)))
