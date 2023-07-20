@@ -50,16 +50,24 @@
     :mode :counter-increments
     :key :c}])
 
-(defn is-enter?
-  "I just couldn't get the key code for enter to work, so I'm using this workaround."
-  [raw-key]
-  (= (str (format "%04x" (int raw-key))) "000a"))
+(defn is-key?
+  [unicode raw-key]
+  (= (str (format "%04x" (int raw-key))) unicode))
 
-(defn handle-input-mode-press [state event]
-  (if (is-enter? (:raw-key event))
+(def is-backspace? (partial is-key? "0008"))
+(def is-enter? (partial is-key? "000a"))
+
+(defn handle-input-mode-press
+  [state
+   {raw-key :raw-key}]
+  (if (is-enter? raw-key)
     (flush-buffer state) ; if enter was pressed flush buffer and return new state
-    (do (swap! text-buffer #(str % (:raw-key event))) ; add input to text buffer
-        state)))
+    (do
+      (swap! text-buffer #(if (is-backspace? raw-key)
+                            ; remove last char from text buffer
+                            (subs % 0 (dec (count %)))
+                            (str % raw-key))) ; add input to text buffer
+      state)))
 
 (defn framerate-mod-2?
   "Helper to make the cursor blink around every second."
