@@ -52,7 +52,11 @@
    {:label "Load Image (i)"
     :mode :image
     :action #(q/load-image %)
-    :key :i}])
+    :key :i}
+   {:label (str (if (:show-grid state) "Hide" "Show") " Grid (g)")
+    :mode nil
+    :action #(assoc % :show-grid (not (:show-grid %)))
+    :key :g}])
 
 (defn is-key?
   [unicode raw-key]

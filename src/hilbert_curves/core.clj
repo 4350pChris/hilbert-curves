@@ -36,6 +36,14 @@
             brightness-result))
         (- 255 (q/brightness (q/get-pixel image 0 0))))))
 
+(defn draw-grid
+  [quadrants height width]
+  (let [w-len (/ width quadrants)
+        h-len (/ height quadrants)]
+    (doseq [x (range 0 width w-len)]
+      (q/line x 0 x height))
+    (doseq [y (range 0 height h-len)]
+      (q/line 0 y width y))))
 
 (defn draw-state [state]
   (q/background 20)
@@ -46,6 +54,8 @@
   ; Clear the sketch by filling it with light-grey color.
   ; Make room for controls at top of the sketch.
   (q/translate 0 controls-height)
+  (when (:show-grid state)
+    (draw-grid (:quadrants state) (draw-height) (q/width)))
   ; Draw hilbert curve for every point in the rectangle
   (let [points (take (:counter state) (:points state))]
     (if-let [image (:image state)]
