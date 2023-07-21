@@ -78,28 +78,42 @@
   []
   (= 0 (mod (int (/ (q/frame-count) (q/current-frame-rate))) 2)))
 
+(defn control-offset-x
+  "Helper to calculate X offset for controls."
+  [idx]
+  (+ 10 (* 300 (int (/ idx 3)))))
+
+(defn control-offset-y
+  "Helper to calculate Y offset for controls."
+  [idx]
+  (+ 40 (* 20 (mod idx 3))))
+
 (defn show-controls [state]
   (q/text-size 14)
   (when (not (= @input-mode :none))
     (q/text (str "Input (Enter to confirm): " @text-buffer (if (framerate-mod-2?) "|" "")) 10 20))
-  (doseq [[idx item] (map-indexed (fn [idx item] [idx item]) (controls state))]
-    (q/text (:label item) (+ 10 (* 300 (int (/ idx 3)))) (+ 40 (* 20 (mod idx 3))))))
+  (->> (controls state)
+       (map-indexed vector)
+       (run! (fn [[idx control]]
+               (q/text (:label control) (control-offset-x idx) (control-offset-y idx))))))
+
+(defn handle-none-mode-press [state {key :key}]
+  (if-let [control (first (filter #(= (:key %) key) (controls state)))]
+    (if (nil? (:mode control))
+        ; if the control has no mode, just invoke the action and return state
+      ((:action control) state)
+        ; if the control has a mode, enter input mode and return state
+      (do (reset! input-mode (:mode control))
+          (reset! current-handler (:action control))
+          state))
+    state)) ; just return state when no mapped key was pressed
 
 (defn key-press
-  [state
-   {key :key :as event}]
+  [state event]
    ; make sure the UI is updated to show input
   (when (not (q/looping?))
     (q/redraw))
     ; if we're not in input mode see if the key maps to a control
-  (if (= @input-mode :none)
-    (if-let [control (first (filter #(= (:key %) key) (controls state)))]
-      (if (nil? (:mode control))
-          ; if the control has no mode, just invoke the action and return state
-        ((:action control) state)
-          ; if the control has a mode, enter input mode and return state
-        (do (reset! input-mode (:mode control))
-            (reset! current-handler (:action control))
-            state))
-      state) ; just return state when no mapped key was pressed
+  (condp = @input-mode
+    :none (handle-none-mode-press state event)
     (handle-input-mode-press state event)))
