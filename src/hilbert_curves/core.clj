@@ -45,24 +45,30 @@
     (doseq [y (range 0 height h-len)]
       (q/line 0 y width y))))
 
-(defn draw-state [state]
+(defn prepare-colors []
   (q/background 20)
   (q/fill 240)
   (q/stroke-weight 1)
-  (q/stroke 255)
+  (q/stroke 255))
+
+(defn draw-state [state]
+  (prepare-colors)
   (show-controls state)
   ; Clear the sketch by filling it with light-grey color.
   ; Make room for controls at top of the sketch.
-  (q/translate 0 controls-height)
-  (when (:show-grid state)
-    (draw-grid (:quadrants state) (draw-height) (q/width)))
-  ; Draw hilbert curve for every point in the rectangle
-  (let [points (take (:counter state) (:points state))]
-    (if-let [image (:image state)]
-      (when (q/loaded? image)
-        (q/resize image (q/width) (draw-height))
-        (draw-dithered image points))
-      (draw-basic points))))
+  (let [pg (q/create-graphics (q/width) (draw-height))]
+    (q/with-graphics pg
+      (prepare-colors)
+      (when (:show-grid state)
+        (draw-grid (:quadrants state) (draw-height) (q/width)))
+      ; Draw hilbert curve for every point in the rectangle
+      (let [points (take (:counter state) (:points state))]
+        (if-let [image (:image state)]
+          (when (q/loaded? image)
+            (q/resize image (q/width) (draw-height))
+            (draw-dithered image points))
+          (draw-basic points))))
+    (q/image pg 0 controls-height)))
 
 (q/defsketch hilbert-curves
   :title "Hilbert Curves"
