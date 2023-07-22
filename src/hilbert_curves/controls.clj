@@ -94,8 +94,14 @@
 
 (defn show-controls [state]
   (q/text-size 14)
+  ; show input when active
   (when (not (= @input-mode :none))
-    (q/text (str "Input (Enter to confirm): " @text-buffer (if (framerate-mod-2?) "|" "")) 10 20))
+    (let [label (some->> (controls state)
+                         (filter #(= (:mode %) @input-mode))
+                         first
+                         :label)]
+      (q/text (str label ": " @text-buffer (if (framerate-mod-2?) "|" "")) 10 20)))
+  ; show controls
   (->> (controls state)
        (map-indexed vector)
        (run! (fn [[idx control]]
