@@ -53,7 +53,7 @@
        (map (partial hilbert order) (range total))))
 
 (defn calculate-params
-  ([order height width] (calculate-params order height width 0 50))
+  ([order height width] (calculate-params order height width 0 1))
   ([order height width counter counter-increments]
    (let [q (quadrants-from-order order)
          total (total-from-quadrants q)
