@@ -100,7 +100,7 @@
                          (filter #(= (:mode %) @input-mode))
                          first
                          :label)]
-      (q/text (str label ": " @text-buffer (if (framerate-mod-2?) "|" "")) 10 20)))
+      (q/text (str label ": " @text-buffer (when (framerate-mod-2?) "|")) 10 20)))
   ; show controls
   (->> (controls state)
        (map-indexed vector)
