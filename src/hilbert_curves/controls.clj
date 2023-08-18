@@ -1,31 +1,25 @@
 (ns hilbert-curves.controls
   (:require [quil.core :as q]))
 
-; keeps track of current input mode, has to respond to a key in state
-(def input-mode (atom :none))
-
-; holds handler that is invoked when text buffer is flushed
-(def current-handler (atom nil))
-
-; holds input value when in input mode, will be flushed an written to state when :enter is pressed
-(def text-buffer (atom ""))
+(defn reset-state [state]
+  (assoc state
+         :mode nil
+         :text-buffer ""
+         :action nil))
 
 (defn flush-buffer
   "Flushes the text buffer, returning new state."
   [state]
-  (let [mode @input-mode
-        handler @current-handler
-        text @text-buffer]
-    (reset! input-mode :none)
-    (reset! current-handler nil)
-    (reset! text-buffer "")
-    (try
-      (if (nil? handler)
-        state
-        (assoc state mode (handler text)))
-      (catch Exception e
-        (println (.getMessage e))
-        state))))
+  (try
+    (reset-state
+     (if-let [handler (:action state)]
+         ; set key saved in :mode to result of handler
+       (assoc state (:mode state) (handler (:text-buffer state)))
+         ; if no handler was set, just return state
+       state))
+    (catch Exception e
+      (println (.getMessage e))
+      state)))
 
 (defn make-action
   "Helper to make actions that take no params and do not return state not break the app."
@@ -39,7 +33,7 @@
   [state]
   [{:label "Loop (space): Pause / Resume"
     :action (make-action #(if (q/looping?) (q/no-loop) (q/start-loop)))
-    :mode nil
+    :mode :none
     :key :space}
    {:label (str "Order (o): " (:order state))
     :action #(Integer/parseInt %)
@@ -54,7 +48,7 @@
     :action #(q/load-image %)
     :key :i}
    {:label (str (if (:show-grid state) "Hide" "Show") " Grid (g)")
-    :mode nil
+    :mode :none
     :action #(assoc % :show-grid (not (:show-grid %)))
     :key :g}])
 
@@ -65,17 +59,19 @@
 (def is-backspace? (partial is-key? "0008"))
 (def is-enter? (partial is-key? "000a"))
 
+(defn append-to-text-buffer [raw-key text-buffer]
+  (if (is-backspace? raw-key)
+    ; remove last char from text buffer
+    (subs text-buffer 0 (Math/max (dec (count text-buffer)) 0))
+    ; add input to text buffer
+    (str text-buffer raw-key)))
+
 (defn handle-input-mode-press
   [state
    {raw-key :raw-key}]
   (if (is-enter? raw-key)
     (flush-buffer state) ; if enter was pressed flush buffer and return new state
-    (do
-      (swap! text-buffer #(if (is-backspace? raw-key)
-                            ; remove last char from text buffer
-                            (subs % 0 (Math/max (dec (count %)) 0))
-                            (str % raw-key))) ; add input to text buffer
-      state)))
+    (assoc state :text-buffer (append-to-text-buffer raw-key (:text-buffer state)))))
 
 (defn framerate-mod-2?
   "Helper to make the cursor blink around every second."
@@ -95,12 +91,12 @@
 (defn show-controls [state]
   (q/text-size 14)
   ; show input when active
-  (when (not (= @input-mode :none))
+  (when (not (= (:mode state) nil))
     (let [label (some->> (controls state)
-                         (filter #(= (:mode %) @input-mode))
+                         (filter #(= (:mode %) (:mode state)))
                          first
                          :label)]
-      (q/text (str label ": " @text-buffer (when (framerate-mod-2?) "|")) 10 20)))
+      (q/text (str label ": " (:text-buffer state) (when (framerate-mod-2?) "|")) 10 20)))
   ; show controls
   (->> (controls state)
        (map-indexed vector)
@@ -109,13 +105,11 @@
 
 (defn handle-none-mode-press [state {key :key}]
   (if-let [control (first (filter #(= (:key %) key) (controls state)))]
-    (if (nil? (:mode control))
+    (if (= (:mode control) :none)
         ; if the control has no mode, just invoke the action and return state
       ((:action control) state)
         ; if the control has a mode, enter input mode and return state
-      (do (reset! input-mode (:mode control))
-          (reset! current-handler (:action control))
-          state))
+      (merge state (select-keys control [:mode :action])))
     state)) ; just return state when no mapped key was pressed
 
 (defn key-press
@@ -123,7 +117,8 @@
    ; make sure the UI is updated to show input
   (when (not (q/looping?))
     (q/redraw))
+  (if (nil? (:mode state))
     ; if we're not in input mode see if the key maps to a control
-  (condp = @input-mode
-    :none (handle-none-mode-press state event)
+    (handle-none-mode-press state event)
+    ; if we're in input mode handle the key press
     (handle-input-mode-press state event)))
