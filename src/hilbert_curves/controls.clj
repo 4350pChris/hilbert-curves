@@ -88,15 +88,19 @@
   [idx]
   (+ 40 (* 20 (mod idx 3))))
 
+(defn build-label [buffer label]
+  (str label ": " buffer (when (framerate-mod-2?) "|")))
+
 (defn show-controls [state]
   (q/text-size 14)
-  ; show input when active
-  (when (not (= (:mode state) nil))
-    (let [label (some->> (controls state)
-                         (filter #(= (:mode %) (:mode state)))
-                         first
-                         :label)]
-      (q/text (str label ": " (:text-buffer state) (when (framerate-mod-2?) "|")) 10 20)))
+  ; show input when active 
+  (some->> (controls state)
+           (filter #(= (:mode %) (:mode state)))
+           first
+           :label
+           (build-label (:text-buffer state))
+           vector
+           (run! #(q/text % 10 20)))
   ; show controls
   (->> (controls state)
        (map-indexed vector)
