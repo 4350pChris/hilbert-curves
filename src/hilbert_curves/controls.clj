@@ -107,8 +107,10 @@
        (run! (fn [[idx control]]
                (q/text (:label control) (control-offset-x idx) (control-offset-y idx))))))
 
-(defn handle-none-mode-press [state {key :key}]
-  (if-let [control (first (filter #(= (:key %) key) (controls state)))]
+(defn handle-nil-mode-press [state {key :key}]
+  (if-let [control (->> (controls state)
+                        (filter #(= (:key %) key))
+                        first)]
     (if (= (:mode control) :none)
         ; if the control has no mode, just invoke the action and return state
       ((:action control) state)
@@ -123,6 +125,6 @@
     (q/redraw))
   (if (nil? (:mode state))
     ; if we're not in input mode see if the key maps to a control
-    (handle-none-mode-press state event)
+    (handle-nil-mode-press state event)
     ; if we're in input mode handle the key press
     (handle-input-mode-press state event)))
