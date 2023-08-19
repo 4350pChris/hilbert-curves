@@ -32,13 +32,17 @@
      point))
   ([order i] (hilbert order 1 (hilbert-start-point i) (bit-shift-right i 2))))
 
+(defn scale-point [coord len]
+  (let [half (/ len 2)]
+    (+ (* coord len) half)))
+
 (defn normalize-point
   "Multiply the point by the dimensions of the rectangle and add half the width or height as offset."
   [quadrants height width [x y]]
   (let [w-len (/ width quadrants)
         h-len (/ height quadrants)]
-    [(+ (* x w-len) (/ w-len 2))
-     (+ (* y h-len) (/ h-len 2))]))
+    [(scale-point x w-len)
+     (scale-point y h-len)]))
 
 (defn hilbert-dither-points
   [image [x1 y1] [x2 y2] brightness]
@@ -49,8 +53,9 @@
     (q/constrain (+ b-diff brightness) 0 255)))
 
 (defn make-points [quadrants height width order total]
-  (map (partial normalize-point quadrants height width)
-       (map (partial hilbert order) (range total))))
+  (->> (range total)
+       (map (partial hilbert order))
+       (map (partial normalize-point quadrants height width))))
 
 (defn calculate-params
   ([order height width] (calculate-params order height width 0 1))

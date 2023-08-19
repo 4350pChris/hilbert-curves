@@ -9,17 +9,13 @@
 
 (defn flush-buffer
   "Flushes the text buffer, returning new state."
-  [state]
-  (reset-state
-   (if-let [handler (:action state)]
-     (try
-         ; set key saved in :mode to result of handler
-       (assoc state (:mode state) (handler (:text-buffer state)))
-       (catch Exception e
-         (println (.getMessage e))
-         state))
-         ; if no handler was set, just return state
-     state)))
+  [{:keys [action mode text-buffer] :as state}]
+  (when action
+    (try
+      ; set key saved in :mode to result of action
+      (reset-state (assoc state mode (action text-buffer)))
+      (catch Exception e
+        (println (.getMessage e))))))
 
 (defn make-action
   "Helper to make actions that take no params and do not return state not break the app."
@@ -53,8 +49,13 @@
     :key :g}])
 
 (defn is-key?
+  "Helper to check if a key is pressed."
   [unicode raw-key]
-  (= (str (format "%04x" (int raw-key))) unicode))
+  (let [key (->> raw-key
+                 int
+                 (format "%04x")
+                 str)]
+    (= key unicode)))
 
 (def is-backspace? (partial is-key? "0008"))
 (def is-enter? (partial is-key? "000a"))
@@ -62,7 +63,7 @@
 (defn append-to-text-buffer [raw-key text-buffer]
   (if (is-backspace? raw-key)
     ; remove last char from text buffer
-    (subs text-buffer 0 (Math/max (dec (count text-buffer)) 0))
+    (subs text-buffer 0 (Math/max 0 (dec (count text-buffer))))
     ; add input to text buffer
     (str text-buffer raw-key)))
 
@@ -76,17 +77,28 @@
 (defn framerate-mod-2?
   "Helper to make the cursor blink around every second."
   []
-  (= 0 (mod (int (/ (q/frame-count) (q/current-frame-rate))) 2)))
+  (-> (q/frame-count)
+      (/ (q/current-frame-rate))
+      (int)
+      (mod 2)
+      (= 0)))
 
 (defn control-offset-x
   "Helper to calculate X offset for controls."
   [idx]
-  (+ 10 (* 300 (int (/ idx 3)))))
+  (-> idx
+      (/ 3)
+      int
+      (* 300)
+      (+ 10)))
 
 (defn control-offset-y
   "Helper to calculate Y offset for controls."
   [idx]
-  (+ 40 (* 20 (mod idx 3))))
+  (-> idx
+      (mod 3)
+      (* 20)
+      (+ 40)))
 
 (defn build-label [buffer label]
   (str label ": " buffer (when (framerate-mod-2?) "|")))
@@ -108,23 +120,23 @@
                (q/text (:label control) (control-offset-x idx) (control-offset-y idx))))))
 
 (defn handle-nil-mode-press [state {key :key}]
-  (if-let [control (->> (controls state)
-                        (filter #(= (:key %) key))
-                        first)]
-    (if (= (:mode control) :none)
+  (when-let [{action :action mode :mode} (->> (controls state)
+                                              (filter #(= (:key %) key))
+                                              first)]
+    (if (= mode :none)
         ; if the control has no mode, just invoke the action and return state
-      ((:action control) state)
+      (action state)
         ; if the control has a mode, enter input mode and return state
-      (merge state (select-keys control [:mode :action])))
-    state)) ; just return state when no mapped key was pressed
+      (assoc state :mode mode :action action))))
 
 (defn key-press
   [state event]
    ; make sure the UI is updated to show input
   (when (not (q/looping?))
     (q/redraw))
-  (if (nil? (:mode state))
-    ; if we're not in input mode see if the key maps to a control
-    (handle-nil-mode-press state event)
-    ; if we're in input mode handle the key press
-    (handle-input-mode-press state event)))
+  (merge state
+         (if (nil? (:mode state))
+           ; if we're not in input mode see if the key maps to a control
+           (handle-nil-mode-press state event)
+           ; if we're in input mode handle the key press
+           (handle-input-mode-press state event))))
