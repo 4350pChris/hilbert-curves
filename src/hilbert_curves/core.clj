@@ -62,9 +62,10 @@
       (when (:show-grid state)
         (draw-grid (:quadrants state) (draw-height) (q/width)))
       ; Draw hilbert curve for every point in the rectangle
-      (let [points (take (:counter state) (:points state))]
-        (if-let [image (:image state)]
-          (when (q/loaded? image)
+      (let [points (take (:counter state) (:points state))
+            image (:image state)]
+        (if (and (not (nil? image)) (q/loaded? image))
+          (do
             (q/resize image (q/width) (draw-height))
             (draw-dithered image points))
           (draw-basic points))))
