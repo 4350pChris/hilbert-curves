@@ -23,26 +23,24 @@
       3 [(- (* 2 len) 1 y) (- len 1 x)])))
 
 (defn hilbert
+  ([order n] (hilbert order 1 (hilbert-start-point n) (bit-shift-right n 2)))
   ([order n point significant]
    (if (< n order)
      (recur order
             (inc n)
             (hilbert-rotate significant point n)
             (bit-shift-right significant 2))
-     point))
-  ([order i] (hilbert order 1 (hilbert-start-point i) (bit-shift-right i 2))))
-
-(defn scale-point [coord len]
-  (let [half (/ len 2)]
-    (+ (* coord len) half)))
+     point)))
 
 (defn normalize-point
   "Multiply the point by the dimensions of the rectangle and add half the width or height as offset."
   [quadrants height width [x y]]
   (let [w-len (/ width quadrants)
         h-len (/ height quadrants)]
-    [(scale-point x w-len)
-     (scale-point y h-len)]))
+    (letfn [(scale-point [coord len]
+              (+ (* coord len) (/ len 2)))]
+      [(scale-point x w-len)
+       (scale-point y h-len)])))
 
 (defn hilbert-dither-points
   [image [x1 y1] [x2 y2] brightness]

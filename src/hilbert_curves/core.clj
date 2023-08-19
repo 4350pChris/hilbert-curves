@@ -16,9 +16,10 @@
   (q/color-mode :hsb 360 255 255)
   (lib/calculate-params initial-order (draw-height) (q/width)))
 
-(defn update-state [state]
+(defn update-state
+  [{:keys [order counter counter-increments] :as state}]
   (merge state
-         (lib/calculate-params (:order state) (draw-height) (q/width) (:counter state) (:counter-increments state))))
+         (lib/calculate-params order (draw-height) (q/width) counter counter-increments)))
 
 (defn draw-basic [points]
   (doseq [[point1 point2] (partition 2 1 points)]
