@@ -10,16 +10,16 @@
 (defn flush-buffer
   "Flushes the text buffer, returning new state."
   [state]
-  (try
-    (reset-state
-     (if-let [handler (:action state)]
+  (reset-state
+   (if-let [handler (:action state)]
+     (try
          ; set key saved in :mode to result of handler
        (assoc state (:mode state) (handler (:text-buffer state)))
+       (catch Exception e
+         (println (.getMessage e))
+         state))
          ; if no handler was set, just return state
-       state))
-    (catch Exception e
-      (println (.getMessage e))
-      state)))
+     state)))
 
 (defn make-action
   "Helper to make actions that take no params and do not return state not break the app."
